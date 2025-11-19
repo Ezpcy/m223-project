@@ -16,17 +16,42 @@ profiles:
     name: Example Profile
     data:
       host: http://127.0.0.1:8080
+      jwt: "{{ file('token.txt') }}"
 
 requests:
+  auth:
+    name: Authentication and Authorization requests
+    requests:
+      login:
+        name: login
+        method: POST
+        url: "{{ host }}/auth/login"
+        body:
+          type: json
+          data: { "email": "batu@mail.com", "password": "Password1" }
+      register:
+        name: register
+        method: POST
+        url: "{{ host }}/auth/register"
+        body:
+          type: json
+          data: { "email": "batu@mail.com", "password": "Password1" }
+
   get_medias:
     name: Get all media
     method: GET
+    authentication:
+      type: bearer
+      token: "{{ jwt }}"
     url: "{{ host }}/media"
 
   create_media:
     name: Create a media collection
     url: "{{ host }}/media"
     method: POST
+    authentication:
+      type: bearer
+      token: "{{ jwt }}"
     body:
       type: json
       data: { "title": "collection" }
@@ -34,7 +59,10 @@ requests:
   delete_media:
     name: Delete a media collection
     method: DELETE
-    url: "{{ host }}/media/"
+    authentication:
+      type: bearer
+      token: "{{ jwt }}"
+    url: "{{ host }}/media/{{ prompt() }}"
 
   music_media:
     name: Music
@@ -43,6 +71,9 @@ requests:
         name: Add new song
         method: POST
         url: "{{ host }}/media/music"
+        authentication:
+          type: bearer
+          token: "{{ jwt }}"
         body:
           type: json
           data:
@@ -51,10 +82,30 @@ requests:
               "artist": "Test Artist",
               "rating": 4,
               "duration": { "minutes": 3, "seconds": 30 },
-              "media": { "id": 1 },
+              "media": { "id": "{{ prompt() }}" },
             }
 
       music_delete:
         name: Delete a song
         method: DELETE
-        url: "{{ host }}/media/music/"
+        authentication:
+          type: bearer
+          token: "{{ jwt }}"
+        url: "{{ host }}/media/music/{{ prompt() }}"
+
+      music_get_all:
+        name: Get all songs
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ jwt }}"
+        url: "{{ host }}/media/music"
+
+      music_get_by_id:
+        name: Get song by id
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ jwt }}"
+        url: "{{ host }}/media/music/{{ prompt() }}"
+
