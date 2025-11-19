@@ -1,5 +1,7 @@
 package ch.m223.MediaCollection.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +27,7 @@ public class Game {
 
     @ManyToOne
     @JoinColumn(name = "media_id")
+    @JsonBackReference("media-game")
     private Media media;
 
     public Integer getRating() {
