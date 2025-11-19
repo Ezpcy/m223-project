@@ -2,6 +2,7 @@ package ch.m223.MediaCollection.service;
 
 import java.util.List;
 
+import ch.m223.MediaCollection.models.ApplicationUser;
 import ch.m223.MediaCollection.models.Media;
 import ch.m223.MediaCollection.models.Music;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,72 +15,97 @@ public class MediaService {
   @Inject
   EntityManager em;
 
+  public List<Media> getAllByUser(Long userId) {
+    return em.createQuery(
+        "SELECT m FROM Media m WHERE m.user.id = :userId", Media.class)
+        .setParameter("userId", userId)
+        .getResultList();
+  }
+
   @Transactional
-  public Media create(Media media) {
+  public Media createForUser(Media media, Long userId) throws Exception {
+    ApplicationUser user = em.find(ApplicationUser.class, userId);
+    if (user == null) {
+      throw new Exception("User not found");
+    }
+    media.setUser(user);
     em.persist(media);
     return media;
   }
 
-  public List<Media> getAll() {
-    var query = em.createQuery("FROM Media", Media.class);
-    return query.getResultList();
-  }
-
   @Transactional
-  public boolean deleteMedia(Long id) {
-    Media media = em.find(Media.class, id);
+  public boolean deleteMediaForUser(Long mediaId, Long userId) {
+    Media media = em.createQuery(
+        "SELECT m FROM Media m WHERE m.id = :mediaId AND m.user.id = :userId", Media.class)
+        .setParameter("mediaId", mediaId)
+        .setParameter("userId", userId)
+        .getResultStream()
+        .findFirst()
+        .orElse(null);
+
     if (media != null) {
       em.remove(media);
       return true;
     }
-
     return false;
   }
 
-
   // Music
-  public List<Music> getMusics() {
-    var query = em.createQuery("FROM Music", Music.class);
-    return query.getResultList();
+  public List<Music> getMusicsForUser(Long userId) {
+    return em.createQuery(
+        "SELECT m FROM Music m WHERE m.media.user.id = :userId", Music.class)
+        .setParameter("userId", userId)
+        .getResultList();
   }
 
-  public Music getMusic(Long id) {
-    return em.find(Music.class, id);
-  } 
+  public Music getMusicForUser(Long musicId, Long userId) {
+    return em.createQuery(
+        "SELECT m FROM Music m WHERE m.id = :musicId AND m.media.user.id = :userId", Music.class)
+        .setParameter("musicId", musicId)
+        .setParameter("userId", userId)
+        .getResultStream()
+        .findFirst()
+        .orElse(null);
+  }
 
-  @Transactional
-  public boolean deleteMusic(Long id) {
-    Music music = em.find(Music.class, id);
+   @Transactional
+   public boolean deleteMusicForUser(Long musicId, Long userId) {
+    Music music = getMusicForUser(musicId, userId);
     if (music != null) {
       em.remove(music);
       return true;
     }
-
     return false;
-  }
-  
+   }
 
-  @Transactional
-  public Music addMusic(Music song) throws Exception {
+   @Transactional
+   public Music addMusicForUser(Music song, Long userId) throws Exception {
     try {
-        // Persist Duration first if it exists
-        if (song.getDuration() != null) {
-            em.persist(song.getDuration());
+      if (song.getDuration() != null) {
+        em.persist(song.getDuration());
+      }
+
+      if (song.getMedia() != null && song.getMedia().getId() != null) {
+        Media media = em.createQuery(
+          "SELECT m FROM Media m WHERE m.id = :mediaId AND m.user.id = :userId", Media.class)  // Fixed: removed space before userId
+          .setParameter("mediaId", song.getMedia().getId())
+          .setParameter("userId", userId)
+          .getResultStream()
+          .findFirst()
+          .orElse(null);
+
+        if (media == null) {
+          throw new Exception("Media not found or does not belong to user");
         }
-        
-        // If media is provided, merge it to attach to the persistence context
-        if (song.getMedia() != null && song.getMedia().getId() != null) {
-            Media media = em.find(Media.class, song.getMedia().getId());
-            if (media == null) {
-                throw new Exception("Media with ID " + song.getMedia().getId() + " not found");
-            }
-            song.setMedia(media);
-        }
-        
-        em.persist(song);
-        return song;
+        song.setMedia(media);
+      } else {
+        throw new Exception("Media is required");
+      }
+
+      em.persist(song);
+      return song;
     } catch (Exception e) {
-        throw new Exception("Failed to add music: " + e.getMessage());
+      throw new Exception("Failed to add music: " + e.getMessage());
     }
-  }
+   }
 }
