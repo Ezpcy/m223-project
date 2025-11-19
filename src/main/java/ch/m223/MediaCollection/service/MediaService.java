@@ -2,8 +2,6 @@ package ch.m223.MediaCollection.service;
 
 import java.util.List;
 
-import ch.m223.MediaCollection.models.Duration;
-import ch.m223.MediaCollection.models.Genre;
 import ch.m223.MediaCollection.models.Media;
 import ch.m223.MediaCollection.models.Music;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -17,44 +15,6 @@ public class MediaService {
   EntityManager em;
 
   @Transactional
-  public void createSampleData() {
-    // Check if sample data already exists
-    var existingGenres = em.createQuery("FROM Genre WHERE name = :name", Genre.class)
-        .setParameter("name", "Action")
-        .getResultList();
-    
-    if (!existingGenres.isEmpty()) {
-      return; // Sample data already exists
-    }
-
-    Genre action = new Genre();
-    action.setName("Action");
-    em.persist(action);
-
-    Media media = new Media();
-    media.setTitle("My Media Collection");
-    media.getGenres().add(action);
-    em.persist(media);
-    
-    action.getMediaItems().add(media);
-    
-    Duration duration = new Duration();
-    duration.setMinutes(3);
-    duration.setSeconds(45);
-    em.persist(duration);
-    
-    Music track = new Music();
-    track.setTitle("Back to black");
-    track.setRating(5);
-    track.setArtist("Amy Winehouse");
-    track.setDuration(duration);
-    em.persist(track);
-
-    media.getMusicItems().add(track);
-    track.setMedia(media);
-  }
-
-  @Transactional
   public Media create(Media media) {
     em.persist(media);
     return media;
@@ -66,8 +26,60 @@ public class MediaService {
   }
 
   @Transactional
-  public Music addMusic(Music song) {
-    em.persist(song);
-    return song; 
+  public boolean deleteMedia(Long id) {
+    Media media = em.find(Media.class, id);
+    if (media != null) {
+      em.remove(media);
+      return true;
+    }
+
+    return false;
+  }
+
+
+  // Music
+  public List<Music> getMusics() {
+    var query = em.createQuery("FROM Music", Music.class);
+    return query.getResultList();
+  }
+
+  public Music getMusic(Long id) {
+    return em.find(Music.class, id);
+  } 
+
+  @Transactional
+  public boolean deleteMusic(Long id) {
+    Music music = em.find(Music.class, id);
+    if (music != null) {
+      em.remove(music);
+      return true;
+    }
+
+    return false;
+  }
+  
+
+  @Transactional
+  public Music addMusic(Music song) throws Exception {
+    try {
+        // Persist Duration first if it exists
+        if (song.getDuration() != null) {
+            em.persist(song.getDuration());
+        }
+        
+        // If media is provided, merge it to attach to the persistence context
+        if (song.getMedia() != null && song.getMedia().getId() != null) {
+            Media media = em.find(Media.class, song.getMedia().getId());
+            if (media == null) {
+                throw new Exception("Media with ID " + song.getMedia().getId() + " not found");
+            }
+            song.setMedia(media);
+        }
+        
+        em.persist(song);
+        return song;
+    } catch (Exception e) {
+        throw new Exception("Failed to add music: " + e.getMessage());
+    }
   }
 }

@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/LucasPickering/slumber/refs/tags/v4.2.0/schemas/collection.json
+# ^ This enables schema validation and autocomplete in your editor
+# https://github.com/redhat-developer/yaml-language-server
+
+# For basic usage info, see:
+# https://slumber.lucaspickering.me/getting_started.html
+# For all collection options, see:
+# https://slumber.lucaspickering.me/api/request_collection/index.html
+
+name: 223 Media Collection
+
+# Profiles are groups of data you can easily switch between. A common usage is
+# to define profiles for various environments of a REST service
+profiles:
+  example:
+    name: Example Profile
+    data:
+      host: http://127.0.0.1:8080
+
+requests:
+  get_medias:
+    name: Get all media
+    method: GET
+    url: "{{ host }}/media"
+
+  create_media:
+    name: Create a media collection
+    url: "{{ host }}/media"
+    method: POST
+    body:
+      type: json
+      data: { "title": "collection" }
+
+  delete_media:
+    name: Delete a media collection
+    method: DELETE
+    url: "{{ host }}/media/"
+
+  music_media:
+    name: Music
+    requests:
+      music_post:
+        name: Add new song
+        method: POST
+        url: "{{ host }}/media/music"
+        body:
+          type: json
+          data:
+            {
+              "title": "Test Track",
+              "artist": "Test Artist",
+              "rating": 4,
+              "duration": { "minutes": 3, "seconds": 30 },
+              "media": { "id": 1 },
+            }
+
+      music_delete:
+        name: Delete a song
+        method: DELETE
+        url: "{{ host }}/media/music/"
