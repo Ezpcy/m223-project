@@ -9,8 +9,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "video")
 public class Video {
 
     @Id
@@ -19,7 +21,7 @@ public class Video {
 
     private String title;
 
-    private String resolution;
+    private String director;
 
     @ManyToOne
     @JoinColumn(name = "media_id")
@@ -56,12 +58,12 @@ public class Video {
         this.title = title;
     }
 
-    public String getResolution() {
-        return resolution;
+    public String getDirector() {
+        return director;
     }
 
-    public void setResolution(String resolution) {
-        this.resolution = resolution;
+    public void setDirector(String director) {
+        this.director = director;
     }
 
     public Media getMedia() {

@@ -11,6 +11,7 @@ import ch.m223.MediaCollection.models.Music;
 import ch.m223.MediaCollection.service.MediaService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.persistence.Table;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;

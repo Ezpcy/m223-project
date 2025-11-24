@@ -35,19 +35,17 @@ public class MediaService {
 
   @Transactional
   public boolean deleteMediaForUser(Long mediaId, Long userId) {
-    Media media = em.createQuery(
+    return em.createQuery(
         "SELECT m FROM Media m WHERE m.id = :mediaId AND m.user.id = :userId", Media.class)
         .setParameter("mediaId", mediaId)
         .setParameter("userId", userId)
         .getResultStream()
         .findFirst()
-        .orElse(null);
-
-    if (media != null) {
-      em.remove(media);
-      return true;
-    }
-    return false;
+        .map(media -> {
+          em.remove(media);
+          return true;
+        })
+        .orElse(false);
   }
 
   // Music

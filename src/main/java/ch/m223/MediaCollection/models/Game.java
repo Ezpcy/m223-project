@@ -9,8 +9,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "game")
 public class Game {
 
     @Id
@@ -20,6 +22,8 @@ public class Game {
     private String title;
 
     private String platform;
+
+    private String description;
 
     // limit from 1 to 5
     @Column(columnDefinition = "integer CHECK (rating >= 1 AND rating <= 10)")
@@ -64,5 +68,13 @@ public class Game {
 
     public void setMedia(Media media) {
         this.media = media;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
